@@ -1,0 +1,871 @@
+{
+  "info": {
+    "_postman_id": "kikuu-sentiment-api-collection",
+    "name": "Kikuu Sentiment API",
+    "description": "Complete API collection for Kikuu Sentiment e-commerce platform with reviews and sentiment analysis",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "kikuu-sentiment"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\",\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"role\": \"buyer\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/accounts/register/",
+              "host": ["{{base_url}}"],
+              "path": ["accounts", "register", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.environment.set('access_token', response.token.access);",
+                  "    pm.environment.set('refresh_token', response.token.refresh);",
+                  "    console.log('Tokens saved to environment');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/accounts/login/",
+              "host": ["{{base_url}}"],
+              "path": ["accounts", "login", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.environment.set('access_token', response.access);",
+                  "    console.log('Access token refreshed');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/accounts/token/refresh/",
+              "host": ["{{base_url}}"],
+              "path": ["accounts", "token", "refresh", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/accounts/users/",
+              "host": ["{{base_url}}"],
+              "path": ["accounts", "users", ""]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Reviews & Sentiment",
+      "item": [
+        {
+          "name": "List Reviews",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/kikuu/reviews/?page=1&user_role=buyer&sentiment=positive&rating=5&search=great",
+              "host": ["{{base_url}}"],
+              "path": ["kikuu", "reviews", ""],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "user_role",
+                  "value": "buyer",
+                  "description": "Filter by buyer or seller"
+                },
+                {
+                  "key": "sentiment",
+                  "value": "positive",
+                  "description": "Filter by positive, negative, neutral"
+                },
+                {
+                  "key": "rating",
+                  "value": "5",
+                  "description": "Filter by rating 1-5"
+                },
+                {
+                  "key": "search",
+                  "value": "great",
+                  "description": "Search in comments and usernames"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Review",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comment\": \"Excellent service and fast delivery! Really impressed with the platform.\",\n  \"sentiment\": \"positive\",\n  \"rating\": 5,\n  \"source_url\": \"https://example.com/order/123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/kikuu/reviews/",
+              "host": ["{{base_url}}"],
+              "path": ["kikuu", "reviews", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Review Detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/kikuu/reviews/{{review_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["kikuu", "reviews", "{{review_id}}", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Review",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comment\": \"Updated: This platform keeps getting better!\",\n  \"sentiment\": \"positive\",\n  \"rating\": 5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/kikuu/reviews/{{review_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["kikuu", "reviews", "{{review_id}}", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Review",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/kikuu/reviews/{{review_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["kikuu", "reviews", "{{review_id}}", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Reviews",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/kikuu/my-reviews/",
+              "host": ["{{base_url}}"],
+              "path": ["kikuu", "my-reviews", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Reviews by Role - Buyer",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/kikuu/reviews/role/buyer/?sentiment=positive&rating=5",
+              "host": ["{{base_url}}"],
+              "path": ["kikuu", "reviews", "role", "buyer", ""],
+              "query": [
+                {
+                  "key": "sentiment",
+                  "value": "positive"
+                },
+                {
+                  "key": "rating",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Reviews by Role - Seller",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/kikuu/reviews/role/seller/",
+              "host": ["{{base_url}}"],
+              "path": ["kikuu", "reviews", "role", "seller", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Review Statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/kikuu/reviews/stats/",
+              "host": ["{{base_url}}"],
+              "path": ["kikuu", "reviews", "stats", ""]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Store Management",
+      "item": [
+        {
+          "name": "List Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/store/categories/",
+              "host": ["{{base_url}}"],
+              "path": ["store", "categories", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Category",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category_name\": \"Electronics\",\n  \"description\": \"Electronic devices and gadgets\",\n  \"cat_image_url\": \"https://example.com/electronics.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/store/categories/",
+              "host": ["{{base_url}}"],
+              "path": ["store", "categories", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/store/products/?page=1",
+              "host": ["{{base_url}}"],
+              "path": ["store", "products", ""],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Product (Seller Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_name\": \"iPhone 15 Pro\",\n  \"description\": \"Latest iPhone with advanced features\",\n  \"price\": \"1199.99\",\n  \"image_url\": \"https://example.com/iphone15pro.jpg\",\n  \"stock\": 25,\n  \"is_available\": true,\n  \"category\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/store/products/",
+              "host": ["{{base_url}}"],
+              "path": ["store", "products", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Product",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_name\": \"iPhone 15 Pro Max\",\n  \"price\": \"1299.99\",\n  \"stock\": 20\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/store/products/{{product_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["store", "products", "{{product_id}}", ""]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Shopping Cart",
+      "item": [
+        {
+          "name": "List Cart Items",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/carts/items/",
+              "host": ["{{base_url}}"],
+              "path": ["carts", "items", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add to Cart",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": 1,\n  \"quantity\": 2\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/carts/items/add/",
+              "host": ["{{base_url}}"],
+              "path": ["carts", "items", "add", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Cart Quantity",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cart_item_id\": 1,\n  \"quantity\": 3\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/carts/items/update-quantity/",
+              "host": ["{{base_url}}"],
+              "path": ["carts", "items", "update-quantity", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove from Cart",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/carts/items/remove/{{cart_item_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["carts", "items", "remove", "{{cart_item_id}}", ""]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Order Management",
+      "item": [
+        {
+          "name": "List User Orders",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/orders/orders/?status=pending&page=1",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "orders", ""],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "pending",
+                  "description": "pending, processed, shipped, completed, canceled"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Order",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"email\": \"john@example.com\",\n  \"phone\": \"+1234567890\",\n  \"district\": \"Kigali\",\n  \"sector\": \"Nyarugenge\",\n  \"cell\": \"Muhima\",\n  \"order_items\": [\n    {\n      \"product_id\": 1,\n      \"quantity\": 1\n    },\n    {\n      \"product_id\": 2,\n      \"quantity\": 2\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/orders/orders/",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "orders", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Order Status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"shipped\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/orders/orders/{{order_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "orders", "{{order_id}}", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Order History",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/orders/my-orders/",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "my-orders", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Seller Orders",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/orders/seller-orders/",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "seller-orders", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Order Statistics",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/orders/orders/stats/",
+              "host": ["{{base_url}}"],
+              "path": ["orders", "orders", "stats", ""]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "System Health",
+      "item": [
+        {
+          "name": "Basic Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_health}}/health/",
+              "host": ["{{base_url_health}}"],
+              "path": ["health", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Detailed Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url_health}}/health/detailed/",
+              "host": ["{{base_url_health}}"],
+              "path": ["health", "detailed", ""]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "base_url_health",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "user_email",
+      "value": "test@example.com",
+      "type": "string"
+    },
+    {
+      "key": "username",
+      "value": "testuser",
+      "type": "string"
+    },
+    {
+      "key": "password",
+      "value": "testpass123",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "review_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "product_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "category_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "cart_item_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "order_id",
+      "value": "1",
+      "type": "string"
+    }
+  ]
+}
