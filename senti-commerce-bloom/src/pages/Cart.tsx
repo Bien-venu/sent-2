@@ -25,10 +25,11 @@ const Cart = () => {
       try {
         await dispatch(
           updateCartQuantityAsync({
-            cart_item_id: id,
+            product: id,
             quantity: newQuantity,
+            action: "add",
           })
-        ).unwrap();
+        );
         // Refetch cart items after update
         dispatch(fetchCartItems());
       } catch (error) {
@@ -39,7 +40,7 @@ const Cart = () => {
 
   const handleRemoveItem = async (id: number) => {
     try {
-      await dispatch(removeFromCartAsync(id)).unwrap();
+      await dispatch(removeFromCartAsync(id));
       toast.success("Item removed from cart");
     } catch (error) {
       toast.error("Failed to remove item");
@@ -94,25 +95,22 @@ const Cart = () => {
               className="bg-white rounded-lg shadow-md p-6 flex items-center space-x-4"
             >
               <img
-                src={item.product.image_url}
-                alt={item.product.product_name}
+                src={item.product_image}
+                alt={item.product_name}
                 className="w-20 h-20 object-cover rounded-lg"
               />
 
               <div className="flex-1">
                 <h3 className="font-semibold text-lg text-gray-800">
-                  {item.product.product_name}
+                  {item.product_name}
                 </h3>
-                <p className="text-gray-600">${item.product.price}</p>
-                <p className="text-sm text-gray-500">
-                  Subtotal: ${item.sub_total}
-                </p>
+                <p className="text-gray-600">${item.money}</p>
               </div>
 
               <div className="flex items-center space-x-3">
                 <button
                   onClick={() =>
-                    handleUpdateQuantity(item.id, item.quantity - 1)
+                    handleUpdateQuantity(item.product_id, item.quantity - 1)
                   }
                   className="p-1 rounded-full hover:bg-gray-100 transition-colors"
                 >
@@ -125,7 +123,7 @@ const Cart = () => {
 
                 <button
                   onClick={() =>
-                    handleUpdateQuantity(item.id, item.quantity + 1)
+                    handleUpdateQuantity(item.product_id, item.quantity + 1)
                   }
                   className="p-1 rounded-full hover:bg-gray-100 transition-colors"
                 >
@@ -134,7 +132,7 @@ const Cart = () => {
               </div>
 
               <div className="text-right">
-                <p className="font-semibold text-lg">${item.sub_total}</p>
+                <p className="font-semibold text-lg">${item.money}</p>
                 <button
                   onClick={() => handleRemoveItem(item.id)}
                   className="text-red-500 hover:text-red-700 transition-colors mt-2"

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from "axios";
 
 const api = axios.create({
@@ -10,9 +11,19 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const storedToken = localStorage.getItem("token");
   if (storedToken) {
-    const token = JSON.parse(storedToken);
-    if (token && token.access) {
-      config.headers.Authorization = `Bearer ${token.access}`;
+    try {
+      const token = JSON.parse(storedToken);
+
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      } else {
+        console.warn(
+          "Token object or access property is missing/invalid:",
+          token
+        );
+      }
+    } catch (e) {
+      localStorage.removeItem("token");
     }
   }
   return config;
@@ -194,8 +205,11 @@ export const apiService = {
   getCartItems: () => api.get<CartItem[]>("/carts/items/"),
   addToCart: (data: { product: number; quantity: number }) =>
     api.post("/carts/items/add/", data),
-  updateCartQuantity: (data: { cart_item_id: number; quantity: number }) =>
-    api.put("/carts/items/update-quantity/", data),
+  updateCartQuantity: (data: {
+    product: number;
+    quantity: number;
+    action: string;
+  }) => api.post("/carts/items/update-quantity/", data),
   removeFromCart: (id: number) => api.delete(`/carts/items/remove/${id}/`),
 
   // Reviews

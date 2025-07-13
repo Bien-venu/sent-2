@@ -10,6 +10,8 @@ const Navbar = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
+  console.log(user?.role);
+
   const handleLogout = () => {
     localStorage.removeItem("user");
     dispatch(logout());
@@ -20,7 +22,7 @@ const Navbar = () => {
     <nav className="bg-white shadow-md px-6 py-4">
       <div className="flex justify-between items-center">
         <Link to="/" className="text-2xl font-bold text-blue-600">
-          Kikuu
+          E-Shop
         </Link>
 
         {isAuthenticated && user ? (
@@ -43,6 +45,15 @@ const Navbar = () => {
                     onClick={() => setIsDropdownOpen(false)}
                   >
                     Seller Dashboard
+                  </Link>
+                )}
+                {user.role === "buyer" && (
+                  <Link
+                    to="/cart"
+                    className="block px-4 py-2 text-sm hover:bg-gray-100 text-gray-700"
+                    onClick={() => setIsDropdownOpen(false)}
+                  >
+                    Cart
                   </Link>
                 )}
                 {user.role === "buyer" && (

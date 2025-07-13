@@ -3,12 +3,9 @@ import { apiService, CartItem as ApiCartItem } from "../../utils/api";
 
 export interface CartItem {
   id: number;
-  product: {
-    id: number;
-    product_name: string;
-    price: string;
-    image_url: string;
-  };
+  product_name: string;
+  price: string;
+  product_image: string;
   quantity: number;
   is_active: boolean;
   sub_total: string;
@@ -35,7 +32,7 @@ export const fetchCartItems = createAsyncThunk(
   "cart/fetchCartItems",
   async () => {
     const response = await apiService.getCartItems();
-    return response.data;
+    return response.data.results;
   }
 );
 
@@ -49,7 +46,7 @@ export const addToCartAsync = createAsyncThunk(
 
 export const updateCartQuantityAsync = createAsyncThunk(
   "cart/updateQuantity",
-  async (data: { cart_item_id: number; quantity: number }) => {
+  async (data: { product: number; quantity: number; action: string }) => {
     const response = await apiService.updateCartQuantity(data);
     return response.data;
   }
@@ -57,12 +54,19 @@ export const updateCartQuantityAsync = createAsyncThunk(
 
 export const removeFromCartAsync = createAsyncThunk(
   "cart/removeFromCart",
-  async (id: number) => {
-    await apiService.removeFromCart(id);
-    return id;
+  async (id: number, { rejectWithValue }) => {
+    try {
+      await apiService.removeFromCart(id);
+      return id; // Return the ID of the removed item
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to remove from cart"
+      );
+    }
   }
 );
-
 const cartSlice = createSlice({
   name: "cart",
   initialState,
@@ -94,9 +98,19 @@ const cartSlice = createSlice({
       })
       .addCase(fetchCartItems.fulfilled, (state, action) => {
         state.loading = false;
-        state.items = action.payload;
-        state.total = action.payload.reduce(
-          (sum, item) => sum + parseFloat(item.sub_total),
+
+        // IMPORTANT: Ensure action.payload is actually an array before proceeding.
+        // If your API returns { cart_items: [...] }, you MUST use `action.payload.cart_items` here.
+        // I'm assuming for this specific issue, you've fixed the `action.payload` type to be an array.
+        const itemsToProcess = Array.isArray(action.payload)
+          ? action.payload
+          : action.payload?.cart_items || []; // Defensive check
+
+        state.items = itemsToProcess;
+
+        state.total = itemsToProcess.reduce(
+          // Use 'item.money' as per your provided item structure
+          (sum, item) => sum + parseFloat(item.money || "0"), // Added `|| '0'` for safety against undefined/null `money`
           0
         );
       })
@@ -139,7 +153,7 @@ const cartSlice = createSlice({
         state.loading = false;
         state.items = state.items.filter((item) => item.id !== action.payload);
         state.total = state.items.reduce(
-          (sum, item) => sum + parseFloat(item.sub_total),
+          (sum, item) => sum + (parseFloat(item.sub_total) || 0),
           0
         );
       })
