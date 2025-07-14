@@ -1,30 +1,29 @@
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "../app/hooks";
-import { clearCart } from "../features/cart/cartSlice";
-import {
-  CreditCard,
-  Lock,
-  User,
-  Mail,
-  MapPin,
-  Loader2,
-  Phone,
-  Hash,
-} from "lucide-react";
-import { toast } from "sonner";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
+import BankTransferForm from "@/components/Checkout/BankTransferForm";
 import CreditCardForm from "@/components/Checkout/CreditCardForm";
 import MobileMoneyForm from "@/components/Checkout/MobileMoneyForm";
-import BankTransferForm from "@/components/Checkout/BankTransferForm";
-import { apiService, CheckoutData } from "../utils/api";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Loader2,
+  Mail,
+  MapPin,
+  PhoneCall,
+  User
+} from "lucide-react";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { useAppDispatch, useAppSelector } from "../app/hooks";
+import { clearCart } from "../features/cart/cartSlice";
+import { apiService } from "../utils/api";
 
 const Checkout = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { items, total } = useAppSelector((state) => state.cart);
+  const { items, total, loading } = useAppSelector((state) => state.cart);
   const { isAuthenticated } = useAppSelector((state) => state.auth);
+
+  console.log(items)
 
   const [paymentMethod, setPaymentMethod] = useState("credit-card");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -50,42 +49,68 @@ const Checkout = () => {
     setFormData({ ...formData, network: value });
   };
 
+  // Inside your handleSubmit function in Checkout.tsx
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
 
     try {
-      // Prepare checkout data according to API format
-      const checkoutData: CheckoutData = {
-        shipping: {
-          full_name: formData.name,
-          email: formData.email,
-          address: formData.address,
-          city: formData.city,
-          zip_code: formData.zip,
-        },
-        payment: {
-          payment_method: paymentMethod.replace("-", "_"), // Convert to snake_case
-          card_number: formData.card,
-          expiry_date: formData.expiry,
-          cvc: formData.cvc,
-        },
+      // Split full_name into first_name and last_name if necessary
+      // For simplicity, let's assume `formData.name` contains the full name
+      // You might want separate input fields for first_name and last_name on your form
+      const [firstName, ...lastNameParts] = formData.name.split(" ");
+      const lastName = lastNameParts.join(" ");
+
+      const orderData = {
+        // Map frontend formData to backend CreateOrderRequest
+        first_name: firstName || "", // Ensure it's not empty
+        last_name: lastName || "", // Ensure it's not empty, handle if only one name is given
+        email: formData.email,
+        phone: formData.phone, // This must come from a form input
+        district: formData.city, // Assuming city maps to district
+        sector: formData.address, // Assuming address maps to sector
+        cell: formData.zip, // Assuming zip maps to cell
+        order_items: items.map((item) => ({
+          product_id: item.product_id,
+          quantity: item.quantity,
+        })),
+        // If your CreateOrderRequest (and backend) needs payment info, add it here.
+        // Current CreateOrderRequest interface does NOT include payment details.
+        // If payment details are needed on the backend, you must update the CreateOrderRequest interface.
+        // For example, if you add payment details to CreateOrderRequest:
+        // payment_method: paymentMethod.replace("-", "_"),
+        // card_number: formData.card,
+        // expiry_date: formData.expiry,
+        // cvc: formData.cvc,
       };
 
-      // Call the checkout API
-      const response = await apiService.checkout(checkoutData);
+      // Make sure your formData state includes all necessary fields from the form
+      // Add 'phone' to your formData state and ensure there's an input for it.
+      // Consider adding separate first_name and last_name inputs if needed.
+
+      const response = await apiService.createOrder(orderData);
 
       if (response.status === 200 || response.status === 201) {
-        toast.success("Payment successful!");
+        toast.success("Order placed successfully!");
         console.log("Order submitted:", response.data);
         dispatch(clearCart());
         navigate("/confirmation");
       } else {
-        toast.error("Payment failed. Please try again.");
+        toast.error("Order failed. Please try again.");
       }
     } catch (error) {
-      console.error("Checkout error:", error);
-      toast.error("Payment failed. Please try again.");
+      console.error("Order submission error:", error);
+      // You can parse the error.response.data to show more specific messages
+      if (axios.isAxiosError(error) && error.response?.data) {
+        console.error("Backend error details:", error.response.data);
+        const errorMessages = Object.values(error.response.data)
+          .flat()
+          .join(". ");
+        toast.error(`Order failed: ${errorMessages}`);
+      } else {
+        toast.error("Order failed. Please try again.");
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -169,6 +194,17 @@ const Checkout = () => {
                     type="text"
                     name="address"
                     placeholder="Address"
+                    onChange={handleChange}
+                    required
+                    className="pl-10 w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="md:col-span-2 relative">
+                  <PhoneCall className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input
+                    type="text"
+                    name="phone"
+                    placeholder="Phone"
                     onChange={handleChange}
                     required
                     className="pl-10 w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
@@ -287,10 +323,10 @@ const Checkout = () => {
             {items.map((item) => (
               <div key={item.id} className="flex justify-between items-center">
                 <div>
-                  <p className="font-medium">{item.name}</p>
+                  <p className="font-medium">{item.product_name}</p>
                   <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
                 </div>
-                <p>${(item.price * item.quantity).toFixed(2)}</p>
+                <p>${(item.money * item.quantity).toFixed(2)}</p>
               </div>
             ))}
           </div>
